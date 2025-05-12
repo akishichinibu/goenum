@@ -40,7 +40,7 @@ func hashEnum(req *model.GenRequest, e *model.Enum) (HashString, error) {
 func hashVariant(req *model.GenRequest, variant *model.Variant) (HashString, error) {
 	var parts []string
 	for _, param := range variant.Params {
-		tr, err := model.NewType(param.Type)
+		tr, err := NewTypeRenderer(req, param.Type)
 		if err != nil {
 			return "", err
 		}

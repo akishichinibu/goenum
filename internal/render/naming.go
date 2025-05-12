@@ -7,7 +7,7 @@ import (
 	"github.com/akishichinibu/goenum/internal/model"
 )
 
-type EnumNaming struct {
+type naming struct {
 	Interface        string
 	Builder          string
 	BuilderImpl      string
@@ -17,10 +17,10 @@ type EnumNaming struct {
 	MatchMethodName string
 }
 
-func NewEnumNaming(m *model.Enum) *EnumNaming {
+func newNaming(m *model.Enum) *naming {
 	nativeName := m.Spec.Name.Name
 	name := strings.TrimPrefix(nativeName, "_G_")
-	return &EnumNaming{
+	return &naming{
 		Interface:        fmt.Sprintf("Enum%sVariant", name),
 		Builder:          fmt.Sprintf("Enum%sBuilder", name),
 		BuilderImpl:      fmt.Sprintf("enum%sBuilder", name),
@@ -30,51 +30,51 @@ func NewEnumNaming(m *model.Enum) *EnumNaming {
 	}
 }
 
-func (e *EnumNaming) VariantInterfaceName(variant *model.Variant) string {
+func (e *naming) VariantInterfaceName(variant *model.Variant) string {
 	return fmt.Sprintf("%s%s", e.Interface, variant.Name)
 }
 
-func (e *EnumNaming) VariantImplName(variant *model.Variant) string {
+func (e *naming) VariantImplName(variant *model.Variant) string {
 	return fmt.Sprintf("_%s%s", e.Interface, variant.Name)
 }
 
-func (e *EnumNaming) VariantBuilderName(variant *model.Variant) string {
+func (e *naming) VariantBuilderName(variant *model.Variant) string {
 	return fmt.Sprintf("%s%sBuilder", e.Interface, variant.Name)
 }
 
-func (e *EnumNaming) VariantBuilderImplName(variant *model.Variant) string {
+func (e *naming) VariantBuilderImplName(variant *model.Variant) string {
 	return fmt.Sprintf("_%s%sBuilder", e.Interface, variant.Name)
 }
 
-func (e *EnumNaming) VariantBuilderSingletonName(variant *model.Variant) string {
+func (e *naming) VariantBuilderSingletonName(variant *model.Variant) string {
 	return fmt.Sprintf("%s%s_", e.BuilderSingleton, variant.Name)
 }
 
-func (e *EnumNaming) VariantBuilderSingletonImplName(variant *model.Variant) string {
+func (e *naming) VariantBuilderSingletonImplName(variant *model.Variant) string {
 	return fmt.Sprintf("%s%s_", e.BuilderImpl, variant.Name)
 }
 
-func (e *EnumNaming) ParamsPrivateFieldName(param *model.Param) string {
+func (e *naming) ParamsPrivateFieldName(param *model.Param) string {
 	return fmt.Sprintf("_%s", param.Name)
 }
 
-func (e *EnumNaming) ParamsPublicFieldName(param *model.Param) string {
+func (e *naming) ParamsPublicFieldName(param *model.Param) string {
 	return fmt.Sprintf("%s%s", strings.ToUpper(string(param.Name[0])), param.Name[1:])
 }
 
-func (e *EnumNaming) ParamsReturnValueName(param *model.Param) string {
+func (e *naming) ParamsReturnValueName(param *model.Param) string {
 	return fmt.Sprintf("%s%s", strings.ToLower(string(param.Name[0])), param.Name[1:])
 }
 
-func (e *EnumNaming) ParamsGetterName(param *model.Param) string {
+func (e *naming) ParamsGetterName(param *model.Param) string {
 	return fmt.Sprintf("Get%s", e.ParamsPublicFieldName(param))
 }
 
-func (e *EnumNaming) ParamsTypeName(param *model.Param) string {
+func (e *naming) ParamsTypeName(param *model.Param) string {
 	return fmt.Sprintf("%s%s", e.Interface, param.Name)
 }
 
-func (e *EnumNaming) ParamsPrivateMemberInVariant(param *model.Param) string {
+func (e *naming) ParamsPrivateMemberInVariant(param *model.Param) string {
 	return fmt.Sprintf("_%s", param.Name)
 }
 

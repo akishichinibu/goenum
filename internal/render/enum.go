@@ -8,7 +8,7 @@ import (
 type Enum struct {
 	req             *model.GenRequest
 	Enum            *model.Enum
-	naming          *EnumNaming
+	naming          *naming
 	enumFingerPrint HashString
 }
 
@@ -21,7 +21,7 @@ func NewEnum(req *model.GenRequest, em *model.Enum) (Renderer, error) {
 		Enum: em,
 
 		req:             req,
-		naming:          NewEnumNaming(em),
+		naming:          newNaming(em),
 		enumFingerPrint: enumFingerPrint,
 	}, nil
 }

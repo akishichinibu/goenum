@@ -8,14 +8,14 @@ import (
 type EnumExportRenderer struct {
 	req    *model.GenRequest
 	Enum   *model.Enum
-	naming *EnumNaming
+	naming *naming
 }
 
 func NewEnumExportRenderer(req *model.GenRequest, em *model.Enum) *EnumExportRenderer {
 	return &EnumExportRenderer{
 		req:    req,
 		Enum:   em,
-		naming: NewEnumNaming(em),
+		naming: newNaming(em),
 	}
 }
 

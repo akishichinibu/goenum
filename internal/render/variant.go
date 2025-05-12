@@ -1,30 +1,26 @@
 package render
 
 import (
-	"github.com/akishichinibu/godantic/internal/gen/naming"
-	typerenderer "github.com/akishichinibu/godantic/internal/gen/renderer/type"
-	"github.com/akishichinibu/godantic/internal/model/enum"
-	"github.com/akishichinibu/godantic/internal/utilities"
 	"github.com/akishichinibu/goenum/internal/model"
 	j "github.com/dave/jennifer/jen"
 )
 
 type ParamWithType struct {
-	Param      *enum.EnumParamMeta
+	Param      *model.Param
 	Type       model.Type
 	Statements []*j.Statement
 }
 
 type VariantRenderer struct {
 	req     *model.GenRequest
-	Variant *enum.EnumVariantMeta
+	Variant *model.Variant
 
-	naming          *naming.EnumNaming
-	enumFingerPrint utilities.HashString
-	fingerPrint     utilities.HashString
+	naming          *naming
+	enumFingerPrint HashString
+	fingerPrint     HashString
 }
 
-func newVariantRenderer(req *model.GenRequest, variant *enum.EnumVariantMeta, enumFingerPrint utilities.HashString) (*VariantRenderer, error) {
+func newVariantRenderer(req *model.GenRequest, variant *model.Variant, enumFingerPrint HashString) (*VariantRenderer, error) {
 	fingerPrint, err := hashVariant(req, variant)
 	if err != nil {
 		return nil, err
@@ -32,7 +28,7 @@ func newVariantRenderer(req *model.GenRequest, variant *enum.EnumVariantMeta, en
 	return &VariantRenderer{
 		req:             req,
 		Variant:         variant,
-		naming:          naming.NewEnumNaming(variant.Enum),
+		naming:          newNaming(variant.Enum),
 		enumFingerPrint: enumFingerPrint,
 		fingerPrint:     fingerPrint,
 	}, nil
@@ -41,7 +37,7 @@ func newVariantRenderer(req *model.GenRequest, variant *enum.EnumVariantMeta, en
 func (e *VariantRenderer) resolveParamsWithType() ([]*ParamWithType, error) {
 	params := make([]*ParamWithType, 0)
 	for _, param := range e.Variant.Params {
-		tr, err := typerenderer.New(e.req, param.Type)
+		tr, err := NewTypeRenderer(e.req, param.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -68,7 +64,7 @@ func (e *VariantRenderer) genBuilderInterfaceMethod() (ss []*j.Statement, err er
 		j.Id(e.Variant.Name).
 			ParamsFunc(func(p *j.Group) {
 				for _, pt := range pts {
-					p.Id(e.naming.ParamsPrivateFieldName(pt.Param)).Add(utilities.ToCode(pt.Statements)...)
+					p.Id(e.naming.ParamsPrivateFieldName(pt.Param)).Add(ToCode(pt.Statements)...)
 				}
 			}).
 			Id(e.naming.Interface),
@@ -83,7 +79,7 @@ func (e *VariantRenderer) genInterfaceMethod() ([]*j.Statement, error) {
 	}
 	ss := make([]*j.Statement, 0)
 	for _, pt := range pts {
-		ss = append(ss, j.Id(e.naming.ParamsGetterName(pt.Param)).Params().Add(utilities.ToCode(pt.Statements)...))
+		ss = append(ss, j.Id(e.naming.ParamsGetterName(pt.Param)).Params().Add(ToCode(pt.Statements)...))
 	}
 	return ss, nil
 }
@@ -115,7 +111,7 @@ func (e *VariantRenderer) genImplStruct(emit Emitter) error {
 		j.Line(),
 		j.Type().Id(e.naming.VariantImplName(e.Variant)).StructFunc(func(g *j.Group) {
 			for _, p := range pts {
-				g.Id(e.naming.ParamsPrivateMemberInVariant(p.Param)).Add(utilities.ToCode(p.Statements)...)
+				g.Id(e.naming.ParamsPrivateMemberInVariant(p.Param)).Add(ToCode(p.Statements)...)
 			}
 		}),
 	)
@@ -136,7 +132,7 @@ func (e *VariantRenderer) genFieldGetters(emit Emitter) error {
 			j.Func().Params(j.Id("v").Op("*").Id(e.naming.VariantImplName(e.Variant))).
 				Id(e.naming.ParamsGetterName(pt.Param)).
 				Params().
-				Params(j.Id(e.naming.ParamsReturnValueName(pt.Param)).Add(utilities.ToCode(pt.Statements)...)).
+				Params(j.Id(e.naming.ParamsReturnValueName(pt.Param)).Add(ToCode(pt.Statements)...)).
 				BlockFunc(func(g *j.Group) {
 					g.Return(j.Id("v").Dot(e.naming.ParamsPrivateFieldName(pt.Param)))
 				}),

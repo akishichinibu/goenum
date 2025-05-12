@@ -62,7 +62,7 @@ func (t *TypeRenderer) Gen() (ss []*j.Statement, err error) {
 	return ss, nil
 }
 
-func New(req *model.GenRequest, t model.Type) (*TypeRenderer, error) {
+func NewTypeRenderer(req *model.GenRequest, t model.Type) (*TypeRenderer, error) {
 	fingerPrint, err := hashType(req.Unit, t)
 	if err != nil {
 		return nil, err
