@@ -11,15 +11,15 @@ type EnumExportRenderer struct {
 	naming *naming
 }
 
-func NewEnumExportRenderer(req *model.GenRequest, em *model.Enum) *EnumExportRenderer {
+func NewEnumExportRenderer(req *model.GenRequest, em *model.Enum) (Renderer, error) {
 	return &EnumExportRenderer{
 		req:    req,
 		Enum:   em,
 		naming: newNaming(em),
-	}
+	}, nil
 }
 
-func (e *EnumExportRenderer) Gen() (ss []*j.Statement, err error) {
+func (e *EnumExportRenderer) Render() (ss []*j.Statement, err error) {
 	ss = append(ss, j.Type().Id(e.naming.Interface).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.Interface))
 	ss = append(ss, j.Line())
 

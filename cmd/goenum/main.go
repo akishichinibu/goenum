@@ -1,9 +1,14 @@
 package main
 
-import "github.com/akishichinibu/goenum/internal/gen"
+import (
+	"os"
+
+	"github.com/akishichinibu/goenum/internal/gen"
+)
 
 func main() {
-	if err := gen.Gen("."); err != nil {
+	workdir := os.Args[1]
+	if err := gen.Gen(workdir); err != nil {
 		panic(err)
 	}
 }

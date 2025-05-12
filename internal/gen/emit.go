@@ -2,6 +2,8 @@ package gen
 
 import (
 	"iter"
+	"os"
+	"path/filepath"
 
 	"github.com/akishichinibu/goenum/internal/model"
 	"github.com/akishichinibu/goenum/internal/render"
@@ -16,14 +18,14 @@ func emitEnum(requests iter.Seq2[*model.GenRequest, error]) error {
 			return err
 		}
 
-		var file *j.File
+		var implFile *j.File
 
-		if p := req.ImplOutputPath(); true {
+		if p := req.Unit.InternalImplFilePath(); true {
 			var ok bool
-			file, ok = files[p]
+			implFile, ok = files[p]
 			if !ok {
-				file = j.NewFilePathName(p, "internal")
-				files[p] = file
+				implFile = j.NewFilePathName(req.Unit.InternalImplImportPath(), req.Unit.GenPackageName())
+				files[p] = implFile
 			}
 		}
 
@@ -32,14 +34,56 @@ func emitEnum(requests iter.Seq2[*model.GenRequest, error]) error {
 			return err
 		}
 
-		ss, err := r.Gen()
+		ss, err := r.Render()
 		if err != nil {
 			return err
 		}
+
 		for _, s := range ss {
-			file.Add(s)
+			implFile.Add(s)
+		}
+
+		var exportFile *j.File
+
+		if p := req.Unit.ExportFilePath(); true {
+			var ok bool
+			exportFile, ok = files[p]
+			if !ok {
+				exportFile = j.NewFilePathName(req.Unit.ImportPath, req.Unit.PackageName())
+				files[p] = exportFile
+			}
+		}
+
+		r, err = render.NewEnumExportRenderer(req, req.Enum)
+		if err != nil {
+			return err
+		}
+
+		ss, err = r.Render()
+		if err != nil {
+			return err
+		}
+
+		for _, s := range ss {
+			exportFile.Add(s)
 		}
 	}
 
+	for path, file := range files {
+		if err := safeSave(file, path); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func safeSave(f *j.File, path string) error {
+	if err := os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
+		return err
+	}
+	if err := f.Save(path); err != nil {
+		return err
+	}
 	return nil
 }

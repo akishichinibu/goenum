@@ -18,7 +18,7 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 			}
 		}
 
-		logger.Info("mod file loaded: ", modFile.Go.Version)
+		logger.Info("mod file loaded", slog.String("goVersion", modFile.Go.Version))
 
 		packages, err := loadPackages(workdir)
 		if err != nil {
@@ -27,15 +27,12 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 			}
 		}
 
-		logger.Info("packages loaded: ", len(packages))
+		logger.Info("packages loaded", slog.Int("count", len(packages)))
 
 		for _, pkg := range packages {
-			slog.Info("loading units for package: ", slog.String("pkgPath", pkg.PkgPath))
-			for _, syntax := range pkg.Syntax {
-				if syntax == nil {
-					continue
-				}
+			slog.Info("loading units for package", slog.String("pkgPath", pkg.PkgPath))
 
+			for _, syntax := range pkg.Syntax {
 				pos := pkg.Fset.Position(syntax.Pos())
 
 				u := &model.GenUnit{
@@ -45,7 +42,7 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 					Node:       syntax,
 				}
 
-				logger.Debug("found unit", slog.String("path", u.Path), slog.String("importPath", u.ImportPath))
+				logger.Info("found unit", slog.String("path", u.Path), slog.String("importPath", u.ImportPath))
 
 				if !yield(u, nil) {
 					return
@@ -56,9 +53,11 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 }
 
 func isGoEnum(decl *ast.GenDecl) bool {
-	for _, comment := range decl.Doc.List {
-		if strings.Contains(comment.Text, "goenum") {
-			return true
+	if decl.Doc != nil {
+		for _, comment := range decl.Doc.List {
+			if strings.Contains(comment.Text, "godantic:enum") {
+				return true
+			}
 		}
 	}
 	return false
@@ -84,6 +83,8 @@ func scanDecl(units iter.Seq2[*model.GenUnit, error]) iter.Seq2[*model.GenReques
 				if !isGoEnum(genDecl) {
 					continue
 				}
+
+				logger.Debug("found godantic:enum", slog.String("pos", unit.Path))
 
 				enums, err := model.NewEnum(genDecl)
 				if err != nil {

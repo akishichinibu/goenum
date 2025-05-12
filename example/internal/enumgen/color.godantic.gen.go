@@ -1,0 +1,170 @@
+package enumgen
+
+type EnumColorVariant interface {
+	_enum_fe1c8a51f24ae80063de4e9e9745a5b0()
+	Equal(other EnumColorVariant) bool
+	Match(Gray func(EnumColorVariantGray), Mix func(EnumColorVariantMix), Red func(EnumColorVariantRed))
+}
+
+// the interface for variant Gray
+
+type EnumColorVariantGray interface {
+	_enum_fe1c8a51f24ae80063de4e9e9745a5b0()
+	GetAlpha() float64
+}
+
+// the implementation struct for variant Gray
+
+type _EnumColorVariantGray struct {
+	_alpha float64
+}
+
+// the getters for variant Gray
+
+func (v *_EnumColorVariantGray) GetAlpha() (alpha float64) {
+	return v._alpha
+}
+
+func (v *_EnumColorVariantGray) _enum_fe1c8a51f24ae80063de4e9e9745a5b0() {}
+
+// the Equal method for variant Gray
+
+func (v *_EnumColorVariantGray) Equal(other EnumColorVariant) bool {
+	if v == nil || other == nil {
+		return false
+	}
+	otherImpl, ok := other.(*_EnumColorVariantGray)
+	if !ok {
+		return false
+	}
+	return *v == *otherImpl
+}
+
+// the Match method for variant Gray
+
+func (v *_EnumColorVariantGray) Match(Gray func(EnumColorVariantGray), Mix func(EnumColorVariantMix), Red func(EnumColorVariantRed)) {
+	Gray(v)
+}
+
+// the interface for variant Mix
+
+type EnumColorVariantMix interface {
+	_enum_fe1c8a51f24ae80063de4e9e9745a5b0()
+	GetR() int
+
+	GetG() int
+
+	GetB() int
+}
+
+// the implementation struct for variant Mix
+
+type _EnumColorVariantMix struct {
+	_r int
+	_g int
+	_b int
+}
+
+// the getters for variant Mix
+
+func (v *_EnumColorVariantMix) GetR() (r int) {
+	return v._r
+}
+
+func (v *_EnumColorVariantMix) GetG() (g int) {
+	return v._g
+}
+
+func (v *_EnumColorVariantMix) GetB() (b int) {
+	return v._b
+}
+
+func (v *_EnumColorVariantMix) _enum_fe1c8a51f24ae80063de4e9e9745a5b0() {}
+
+// the Equal method for variant Mix
+
+func (v *_EnumColorVariantMix) Equal(other EnumColorVariant) bool {
+	if v == nil || other == nil {
+		return false
+	}
+	otherImpl, ok := other.(*_EnumColorVariantMix)
+	if !ok {
+		return false
+	}
+	return *v == *otherImpl
+}
+
+// the Match method for variant Mix
+
+func (v *_EnumColorVariantMix) Match(Gray func(EnumColorVariantGray), Mix func(EnumColorVariantMix), Red func(EnumColorVariantRed)) {
+	Mix(v)
+}
+
+// the interface for variant Red
+
+type EnumColorVariantRed interface {
+	_enum_fe1c8a51f24ae80063de4e9e9745a5b0()
+}
+
+// the implementation struct for variant Red
+
+type _EnumColorVariantRed struct{}
+
+// the getters for variant Red
+
+func (v *_EnumColorVariantRed) _enum_fe1c8a51f24ae80063de4e9e9745a5b0() {}
+
+// the Equal method for variant Red
+
+func (v *_EnumColorVariantRed) Equal(other EnumColorVariant) bool {
+	if v == nil || other == nil {
+		return false
+	}
+	otherImpl, ok := other.(*_EnumColorVariantRed)
+	if !ok {
+		return false
+	}
+	return *v == *otherImpl
+}
+
+// the Match method for variant Red
+
+func (v *_EnumColorVariantRed) Match(Gray func(EnumColorVariantGray), Mix func(EnumColorVariantMix), Red func(EnumColorVariantRed)) {
+	Red(v)
+}
+
+// the builder interface for EnumColorVariant
+
+type EnumColorBuilder interface {
+	Gray(_alpha float64) EnumColorVariant
+
+	Mix(_r int, _g int, _b int) EnumColorVariant
+
+	Red() EnumColorVariant
+}
+
+// the builder for EnumColorBuilder
+
+type enumColorBuilder struct{}
+
+// the builder method for EnumColorVariantGrayBuilder
+
+func (enumColorBuilder) Gray(Alpha float64) EnumColorVariant {
+	return &_EnumColorVariantGray{Alpha}
+}
+
+// the builder method for EnumColorVariantMixBuilder
+
+func (enumColorBuilder) Mix(R int, G int, B int) EnumColorVariant {
+	return &_EnumColorVariantMix{R, G, B}
+}
+
+// the builder method for EnumColorVariantRedBuilder
+
+func (enumColorBuilder) Red() EnumColorVariant {
+	return &_EnumColorVariantRed{}
+}
+
+// the singleton instance for EnumColor
+
+var EnumColor EnumColorBuilder = &enumColorBuilder{}

@@ -21,7 +21,7 @@ func ChainRender(es ...Renderable) (ss []*j.Statement, err error) {
 }
 
 type Renderer interface {
-	Gen() ([]*j.Statement, error)
+	Render() ([]*j.Statement, error)
 }
 
 func ToCode(ss []*j.Statement) []j.Code {

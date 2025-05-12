@@ -144,7 +144,7 @@ func (e *Enum) genBuilderMethod(emit Emitter, variant *model.Variant) (ss []*j.S
 	return ss, nil
 }
 
-func (e *Enum) Gen() ([]*j.Statement, error) {
+func (e *Enum) Render() ([]*j.Statement, error) {
 	return ChainRender(
 		e.genInterface,
 		e.genVariant,
