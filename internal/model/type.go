@@ -17,15 +17,3 @@ func NewType(ident ast.Expr) (Type, error) {
 		Indent: ident,
 	}, nil
 }
-
-type ArrayType struct {
-	ElemType Type
-}
-
-var _ Type = &ArrayType{}
-
-func NewTypeArray(elemType Type) Type {
-	return &ArrayType{
-		ElemType: elemType,
-	}
-}

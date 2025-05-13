@@ -4,42 +4,32 @@ import (
 	"fmt"
 	"go/ast"
 	"go/token"
+	"strings"
 )
 
-type ValueType string
-
-const ValueTypeString ValueType = "string"
-const ValueTypeInt ValueType = "int"
-const ValueTypeFloat ValueType = "float"
+const EnumDefinitionPrefix = "_E_"
 
 type Enum struct {
 	Spec      *ast.TypeSpec
 	Variants  []*Variant
-	ValueType *ValueType
+	ValueType Type
 }
 
 func (e *Enum) AddVariant(variant *Variant) error {
-	for _, v := range e.Variants {
-		if v.ValueType != variant.ValueType {
-			return fmt.Errorf("variant %s has different value type from %s", variant.Name, v.Name)
-		}
-	}
 	e.Variants = append(e.Variants, variant)
+
 	return nil
 }
 
-type InvalidEnumError struct {
-	decl   *ast.GenDecl
-	reason string
-}
+func parseDeclAsEnum(unit *GenUnit, decl *ast.GenDecl, spec *ast.TypeSpec, iface *ast.InterfaceType) (e *Enum, err error) {
+	if !strings.HasPrefix(spec.Name.Name, EnumDefinitionPrefix) {
+		return nil, &InvalidEnumError{
+			unit:   unit,
+			decl:   decl,
+			reason: fmt.Sprintf("godantic enum should be declared with `%s`, got %s", EnumDefinitionPrefix, spec.Name.Name),
+		}
+	}
 
-var _ error = &InvalidEnumError{}
-
-func (e *InvalidEnumError) Error() string {
-	return fmt.Sprintf("invalid enum declaration: %+v, %s", e.decl, e.reason)
-}
-
-func parseDeclAsEnum(_ *ast.GenDecl, spec *ast.TypeSpec, iface *ast.InterfaceType) (e *Enum, err error) {
 	e = &Enum{
 		Spec:      spec,
 		Variants:  make([]*Variant, 0),
@@ -50,10 +40,16 @@ func parseDeclAsEnum(_ *ast.GenDecl, spec *ast.TypeSpec, iface *ast.InterfaceTyp
 		for _, name := range method.Names {
 			funcType, ok := method.Type.(*ast.FuncType)
 			if !ok {
-				return nil, fmt.Errorf("invalid method type for %s: %T", name.Name, method.Type)
+				return nil, &InvalidVariantError{
+					unit:     unit,
+					decl:     spec,
+					funcType: funcType,
+					name:     name.Name,
+					reason:   "invalid method type",
+				}
 			}
 
-			variants, err := newVariant(e, method, funcType)
+			variants, err := newVariant(unit, e, method, funcType)
 			if err != nil {
 				return nil, err
 			}
@@ -65,10 +61,12 @@ func parseDeclAsEnum(_ *ast.GenDecl, spec *ast.TypeSpec, iface *ast.InterfaceTyp
 						if err != nil {
 							return nil, err
 						}
+
 						p := newParam(variant, param.Name, ft)
 						variant.AddParam(p)
 					}
 				}
+
 				if err := e.AddVariant(variant); err != nil {
 					return nil, err
 				}
@@ -76,10 +74,54 @@ func parseDeclAsEnum(_ *ast.GenDecl, spec *ast.TypeSpec, iface *ast.InterfaceTyp
 		}
 	}
 
+	switch {
+	case allValueTypeNil(e.Variants):
+	case allValueTypeNotNil(e.Variants):
+		for _, variant := range e.Variants {
+			if len(variant.Spec.Params.List) != 0 {
+				return nil, &InvalidVariantError{
+					unit:     unit,
+					decl:     spec,
+					funcType: variant.Spec,
+					name:     variant.Name,
+					reason:   "value enum should not have parameters",
+				}
+			}
+
+			e.ValueType = e.Variants[0].ValueType
+		}
+	default:
+		return nil, &InvalidEnumError{
+			unit:   unit,
+			decl:   decl,
+			reason: "enum should have all variants with same value type",
+		}
+	}
+
 	return e, nil
 }
 
-func NewEnum(decl *ast.GenDecl) (ms []*Enum, err error) {
+func allValueTypeNil(s []*Variant) bool {
+	for _, v := range s {
+		if v.ValueType != nil {
+			return false
+		}
+	}
+
+	return true
+}
+
+func allValueTypeNotNil(s []*Variant) bool {
+	for _, v := range s {
+		if v.ValueType == nil {
+			return false
+		}
+	}
+
+	return true
+}
+
+func NewEnum(unit *GenUnit, decl *ast.GenDecl) (ms []*Enum, err error) {
 	if decl.Tok != token.TYPE {
 		return nil, &InvalidEnumError{
 			decl:   decl,
@@ -98,7 +140,7 @@ func NewEnum(decl *ast.GenDecl) (ms []*Enum, err error) {
 			continue
 		}
 
-		meta, err := parseDeclAsEnum(decl, typeSpec, iface)
+		meta, err := parseDeclAsEnum(unit, decl, typeSpec, iface)
 		if err != nil {
 			return nil, err
 		}

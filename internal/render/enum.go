@@ -17,6 +17,7 @@ func NewEnum(req *model.GenRequest, em *model.Enum) (Renderer, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Enum{
 		Enum: em,
 
@@ -26,8 +27,18 @@ func NewEnum(req *model.GenRequest, em *model.Enum) (Renderer, error) {
 	}, nil
 }
 
-// ExportInterface is the interface that is generated to present this enum
-func (e *Enum) genInterface(emit Emitter) error {
+func (e *Enum) Render(emit Emitter) error {
+	return multiRender(
+		emit,
+		e.renderInterface,
+		e.renderVariant,
+		e.renderBuilderInterface,
+		e.renderBuilderImpl,
+	)
+}
+
+// ExportInterface is the interface that is generated to present this enum.
+func (e *Enum) renderInterface(emit Emitter) error {
 	emit(
 		j.Type().Id(e.naming.Interface).Interface(
 			j.Id("_enum_"+e.enumFingerPrint.Hash()).Params(),
@@ -40,44 +51,48 @@ func (e *Enum) genInterface(emit Emitter) error {
 			}),
 		),
 	)
+
 	return nil
 }
 
-func (e *Enum) genVariant(emit Emitter) error {
+func (e *Enum) renderVariant(emit Emitter) error {
 	for _, variant := range e.Enum.Variants {
 		ev, err := newVariantRenderer(e.req, variant, e.enumFingerPrint)
 		if err != nil {
 			return err
 		}
-		is, err := ev.Gen()
-		if err != nil {
+
+		if err := ev.Render(emit); err != nil {
 			return err
 		}
-		emit(is...)
 	}
+
 	return nil
 }
 
-func (e *Enum) genBuilderInterface(emit Emitter) error {
+func (e *Enum) renderBuilderInterface(emit Emitter) error {
 	emit(j.Commentf("the builder interface for %s", e.naming.Interface))
 	emit(j.Line())
 
-	ms := make([]*j.Statement, 0)
+	methods := make([]*j.Statement, 0)
+
 	for _, variant := range e.Enum.Variants {
 		vr, err := newVariantRenderer(e.req, variant, e.enumFingerPrint)
 		if err != nil {
 			return err
 		}
+
 		m, err := vr.genBuilderInterfaceMethod()
 		if err != nil {
 			return err
 		}
-		ms = append(ms, m...)
+
+		methods = append(methods, m...)
 	}
 
 	emit(
 		j.Type().Id(e.naming.Builder).InterfaceFunc(func(g *j.Group) {
-			for _, m := range ms {
+			for _, m := range methods {
 				g.Add(m)
 				g.Line()
 			}
@@ -87,18 +102,19 @@ func (e *Enum) genBuilderInterface(emit Emitter) error {
 	return nil
 }
 
-func (e *Enum) genBuilderImpl(emit Emitter) error {
+func (e *Enum) renderBuilderImpl(emit Emitter) error {
 	emit(j.Commentf("the builder for %s", e.naming.Builder))
 	emit(j.Line())
 
 	emit(j.Type().Id(e.naming.BuilderImpl).Struct())
 
 	for _, variant := range e.Enum.Variants {
-		if s, err := e.genBuilderMethod(emit, variant); err != nil {
+		if s, err := e.renderBuilderMethod(emit, variant); err != nil {
 			return err
 		} else {
 			emit(s...)
 		}
+
 		emit(j.Line())
 	}
 
@@ -110,11 +126,12 @@ func (e *Enum) genBuilderImpl(emit Emitter) error {
 	return nil
 }
 
-func (e *Enum) genBuilderMethod(emit Emitter, variant *model.Variant) (ss []*j.Statement, err error) {
+func (e *Enum) renderBuilderMethod(emit Emitter, variant *model.Variant) (ss []*j.Statement, err error) {
 	vr, err := newVariantRenderer(e.req, variant, e.enumFingerPrint)
 	if err != nil {
 		return nil, err
 	}
+
 	pts, err := vr.resolveParamsWithType()
 	if err != nil {
 		return nil, err
@@ -128,7 +145,7 @@ func (e *Enum) genBuilderMethod(emit Emitter, variant *model.Variant) (ss []*j.S
 		Id(variant.Name).
 		ParamsFunc(func(p *j.Group) {
 			for _, param := range pts {
-				p.Id(e.naming.ParamsPublicFieldName(param.Param)).Add(ToCode(param.Statements)...)
+				p.Id(e.naming.ParamsPublicFieldName(param.Param)).Add(toCode(param.Statements)...)
 			}
 		}).
 		Params(j.Id(e.naming.Interface)).
@@ -142,13 +159,4 @@ func (e *Enum) genBuilderMethod(emit Emitter, variant *model.Variant) (ss []*j.S
 	)
 
 	return ss, nil
-}
-
-func (e *Enum) Render() ([]*j.Statement, error) {
-	return ChainRender(
-		e.genInterface,
-		e.genVariant,
-		e.genBuilderInterface,
-		e.genBuilderImpl,
-	)
 }

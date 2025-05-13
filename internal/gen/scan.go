@@ -18,7 +18,7 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 			}
 		}
 
-		logger.Info("mod file loaded", slog.String("goVersion", modFile.Go.Version))
+		Logger.Info("mod file loaded", slog.String("goVersion", modFile.Go.Version))
 
 		packages, err := loadPackages(workdir)
 		if err != nil {
@@ -27,13 +27,17 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 			}
 		}
 
-		logger.Info("packages loaded", slog.Int("count", len(packages)))
+		Logger.Info("packages loaded", slog.Int("count", len(packages)))
 
 		for _, pkg := range packages {
 			slog.Info("loading units for package", slog.String("pkgPath", pkg.PkgPath))
 
 			for _, syntax := range pkg.Syntax {
 				pos := pkg.Fset.Position(syntax.Pos())
+
+				if strings.HasSuffix(pos.Filename, "_test.go") || strings.HasSuffix(pos.Filename, ".gen.go") {
+					continue
+				}
 
 				u := &model.GenUnit{
 					Path:       pos.Filename,
@@ -42,7 +46,7 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 					Node:       syntax,
 				}
 
-				logger.Info("found unit", slog.String("path", u.Path), slog.String("importPath", u.ImportPath))
+				Logger.Info("found unit", slog.String("path", u.Path), slog.String("importPath", u.ImportPath))
 
 				if !yield(u, nil) {
 					return
@@ -50,17 +54,6 @@ func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 			}
 		}
 	}
-}
-
-func isGoEnum(decl *ast.GenDecl) bool {
-	if decl.Doc != nil {
-		for _, comment := range decl.Doc.List {
-			if strings.Contains(comment.Text, "godantic:enum") {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func scanDecl(units iter.Seq2[*model.GenUnit, error]) iter.Seq2[*model.GenRequest, error] {
@@ -78,15 +71,17 @@ func scanDecl(units iter.Seq2[*model.GenUnit, error]) iter.Seq2[*model.GenReques
 					continue
 				}
 
-				logger.Debug("found declaration", slog.String("pos", unit.Path))
+				Logger.Info("found declaration", slog.String("pos", unit.Path))
 
 				if !isGoEnum(genDecl) {
+					Logger.Info("not a godantic:enum", slog.String("pos", unit.Path))
+
 					continue
 				}
 
-				logger.Debug("found godantic:enum", slog.String("pos", unit.Path))
+				Logger.Info("found godantic:enum", slog.String("pos", unit.Path))
 
-				enums, err := model.NewEnum(genDecl)
+				enums, err := model.NewEnum(unit, genDecl)
 				if err != nil {
 					if !yield(nil, err) {
 						return
@@ -105,4 +100,16 @@ func scanDecl(units iter.Seq2[*model.GenUnit, error]) iter.Seq2[*model.GenReques
 			}
 		}
 	}
+}
+
+func isGoEnum(decl *ast.GenDecl) bool {
+	if decl.Doc != nil {
+		for _, comment := range decl.Doc.List {
+			if strings.Contains(comment.Text, "godantic:enum") {
+				return true
+			}
+		}
+	}
+
+	return false
 }

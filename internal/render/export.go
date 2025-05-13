@@ -19,21 +19,22 @@ func NewEnumExportRenderer(req *model.GenRequest, em *model.Enum) (Renderer, err
 	}, nil
 }
 
-func (e *EnumExportRenderer) Render() (ss []*j.Statement, err error) {
-	ss = append(ss, j.Type().Id(e.naming.Interface).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.Interface))
-	ss = append(ss, j.Line())
+func (e *EnumExportRenderer) Render(emit Emitter) error {
+	emit(j.Type().Id(e.naming.Interface).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.Interface))
+	emit(j.Line())
 
-	ss = append(ss, j.Type().Id(e.naming.Builder).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.Builder))
-	ss = append(ss, j.Line())
+	emit(j.Type().Id(e.naming.Builder).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.Builder))
+	emit(j.Line())
 
 	for _, variant := range e.Enum.Variants {
 		name := e.naming.VariantInterfaceName(variant)
-		ss = append(ss, j.Type().Id(name).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), name))
-		ss = append(ss, j.Line())
+		emit(j.Type().Id(name).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), name))
+		emit(j.Line())
 	}
 
-	ss = append(ss, j.Line())
-	ss = append(ss, j.Var().Id(e.naming.BuilderSingleton).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.BuilderSingleton))
-	ss = append(ss, j.Line())
-	return ss, nil
+	emit(j.Line())
+	emit(j.Var().Id(e.naming.BuilderSingleton).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.BuilderSingleton))
+	emit(j.Line())
+
+	return nil
 }

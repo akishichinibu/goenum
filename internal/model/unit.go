@@ -24,7 +24,7 @@ func (u *GenUnit) PackageName() string {
 }
 
 func (u *GenUnit) GenPackageName() string {
-	return fmt.Sprintf("%sgen", u.PackageName())
+	return u.PackageName() + "gen"
 }
 
 func (u *GenUnit) GodanticImplImportPath() string {
@@ -35,6 +35,7 @@ func (u *GenUnit) FileNameBase() string {
 	fn := filepath.Base(u.Path)
 	ext := filepath.Ext(fn)
 	base := fn[:len(fn)-len(ext)]
+
 	return base
 }
 
@@ -44,6 +45,7 @@ func (u *GenUnit) InternalImplFilePath() string {
 	dir := u.PathDir()
 	base := u.FileNameBase()
 	genfn := fmt.Sprintf("%s%s", base, godanticGenFileSuffix)
+
 	return filepath.Join(dir, "internal", u.GenPackageName(), genfn)
 }
 
@@ -55,5 +57,6 @@ func (u *GenUnit) ExportFilePath() string {
 	dir := u.PathDir()
 	base := u.FileNameBase()
 	genfn := fmt.Sprintf("%s%s", base, godanticGenFileSuffix)
+
 	return filepath.Join(dir, genfn)
 }

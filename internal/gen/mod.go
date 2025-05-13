@@ -16,6 +16,7 @@ func loadModFile(workdir string) (*modfile.File, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to read go.mod: %w", err)
 	}
+
 	return modfile.Parse(modFileName, data, nil)
 }
 

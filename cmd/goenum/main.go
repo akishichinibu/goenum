@@ -9,6 +9,7 @@ import (
 func main() {
 	workdir := os.Args[1]
 	if err := gen.Gen(workdir); err != nil {
-		panic(err)
+		gen.Logger.Error(err.Error())
+		os.Exit(1)
 	}
 }

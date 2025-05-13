@@ -6,28 +6,25 @@ type Emitter func(s ...*j.Statement)
 
 type Renderable func(Emitter) error
 
-func ChainRender(es ...Renderable) (ss []*j.Statement, err error) {
-	var emitter = func(s ...*j.Statement) {
-		ss = append(ss, j.Line())
-		ss = append(ss, s...)
-		ss = append(ss, j.Line())
-	}
+func multiRender(emit Emitter, es ...Renderable) error {
 	for _, e := range es {
-		if err := e(emitter); err != nil {
-			return nil, err
+		if err := e(emit); err != nil {
+			return err
 		}
 	}
-	return ss, nil
+
+	return nil
 }
 
 type Renderer interface {
-	Render() ([]*j.Statement, error)
+	Render(emit Emitter) error
 }
 
-func ToCode(ss []*j.Statement) []j.Code {
+func toCode(ss []*j.Statement) []j.Code {
 	codes := make([]j.Code, len(ss))
 	for i, s := range ss {
 		codes[i] = s
 	}
+
 	return codes
 }

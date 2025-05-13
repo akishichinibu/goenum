@@ -15,18 +15,21 @@ type naming struct {
 
 	EqualMethodName string
 	MatchMethodName string
+	ValueMethodName string
 }
 
 func newNaming(m *model.Enum) *naming {
 	nativeName := m.Spec.Name.Name
-	name := strings.TrimPrefix(nativeName, "_G_")
+	name := strings.TrimPrefix(nativeName, model.EnumDefinitionPrefix)
+
 	return &naming{
 		Interface:        fmt.Sprintf("Enum%sVariant", name),
 		Builder:          fmt.Sprintf("Enum%sBuilder", name),
 		BuilderImpl:      fmt.Sprintf("enum%sBuilder", name),
-		BuilderSingleton: fmt.Sprintf("Enum%s", name),
+		BuilderSingleton: "Enum" + name,
 		EqualMethodName:  "Equal",
 		MatchMethodName:  "Match",
+		ValueMethodName:  "Value",
 	}
 }
 
@@ -55,7 +58,7 @@ func (e *naming) VariantBuilderSingletonImplName(variant *model.Variant) string 
 }
 
 func (e *naming) ParamsPrivateFieldName(param *model.Param) string {
-	return fmt.Sprintf("_%s", param.Name)
+	return "_" + param.Name
 }
 
 func (e *naming) ParamsPublicFieldName(param *model.Param) string {
@@ -67,7 +70,7 @@ func (e *naming) ParamsReturnValueName(param *model.Param) string {
 }
 
 func (e *naming) ParamsGetterName(param *model.Param) string {
-	return fmt.Sprintf("Get%s", e.ParamsPublicFieldName(param))
+	return "Get" + e.ParamsPublicFieldName(param)
 }
 
 func (e *naming) ParamsTypeName(param *model.Param) string {
@@ -75,7 +78,7 @@ func (e *naming) ParamsTypeName(param *model.Param) string {
 }
 
 func (e *naming) ParamsPrivateMemberInVariant(param *model.Param) string {
-	return fmt.Sprintf("_%s", param.Name)
+	return "_" + param.Name
 }
 
 // func (p *EnumParamMeta) PrivateName() string {
