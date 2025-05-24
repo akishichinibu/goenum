@@ -26,7 +26,7 @@ func parseDeclAsEnum(unit *GenUnit, decl *ast.GenDecl, spec *ast.TypeSpec, iface
 		return nil, &InvalidEnumError{
 			unit:   unit,
 			decl:   decl,
-			reason: fmt.Sprintf("godantic enum should be declared with `%s`, got %s", EnumDefinitionPrefix, spec.Name.Name),
+			reason: fmt.Sprintf("goenum should be declared with `%s`, got %s", EnumDefinitionPrefix, spec.Name.Name),
 		}
 	}
 
@@ -125,7 +125,8 @@ func NewEnum(unit *GenUnit, decl *ast.GenDecl) (ms []*Enum, err error) {
 	if decl.Tok != token.TYPE {
 		return nil, &InvalidEnumError{
 			decl:   decl,
-			reason: fmt.Sprintf("godantic enum should be declared with `%s`, got %s", token.TYPE, decl.Tok),
+			unit:   unit,
+			reason: fmt.Sprintf("goenum should be declared with `%s`, got %s", token.TYPE, decl.Tok),
 		}
 	}
 

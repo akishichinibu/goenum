@@ -38,6 +38,19 @@ func newVariantRenderer(req *model.GenRequest, variant *model.Variant, enumFinge
 	}, nil
 }
 
+func (e *VariantRenderer) Render(emit Emitter) error {
+	return multiRender(
+		emit,
+		e.genInterface,
+		e.genImplStruct,
+		e.genFieldGetters,
+		e.genHashTagImplement,
+		e.genEqualImpl,
+		e.genMatch,
+		e.genValue,
+	)
+}
+
 func (e *VariantRenderer) resolveParamsWithType() (params []*ParamWithType, error error) {
 	for _, param := range e.Variant.Params {
 		pt := &ParamWithType{
@@ -258,17 +271,4 @@ func (e *VariantRenderer) genValue(emit Emitter) error {
 	)
 
 	return nil
-}
-
-func (e *VariantRenderer) Render(emit Emitter) error {
-	return multiRender(
-		emit,
-		e.genInterface,
-		e.genImplStruct,
-		e.genFieldGetters,
-		e.genHashTagImplement,
-		e.genEqualImpl,
-		e.genMatch,
-		e.genValue,
-	)
 }

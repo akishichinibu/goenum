@@ -20,20 +20,20 @@ func NewEnumExportRenderer(req *model.GenRequest, em *model.Enum) (Renderer, err
 }
 
 func (e *EnumExportRenderer) Render(emit Emitter) error {
-	emit(j.Type().Id(e.naming.Interface).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.Interface))
+	emit(j.Type().Id(e.naming.Interface).Op("=").Qual(e.req.Unit.GoenumImplImportPath(), e.naming.Interface))
 	emit(j.Line())
 
-	emit(j.Type().Id(e.naming.Builder).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.Builder))
+	emit(j.Type().Id(e.naming.Builder).Op("=").Qual(e.req.Unit.GoenumImplImportPath(), e.naming.Builder))
 	emit(j.Line())
 
 	for _, variant := range e.Enum.Variants {
 		name := e.naming.VariantInterfaceName(variant)
-		emit(j.Type().Id(name).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), name))
+		emit(j.Type().Id(name).Op("=").Qual(e.req.Unit.GoenumImplImportPath(), name))
 		emit(j.Line())
 	}
 
 	emit(j.Line())
-	emit(j.Var().Id(e.naming.BuilderSingleton).Op("=").Qual(e.req.Unit.GodanticImplImportPath(), e.naming.BuilderSingleton))
+	emit(j.Var().Id(e.naming.BuilderSingleton).Op("=").Qual(e.req.Unit.GoenumImplImportPath(), e.naming.BuilderSingleton))
 	emit(j.Line())
 
 	return nil

@@ -12,6 +12,7 @@ import (
 type HashString string
 
 func (h HashString) Hash() string {
+	//nolint:gosec
 	hash := md5.Sum([]byte(h))
 
 	return hex.EncodeToString(hash[:])

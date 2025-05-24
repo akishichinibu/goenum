@@ -1,6 +1,6 @@
 package enum
 
-// godantic:enum
+// goenum
 type _E_HTTPSuccess interface {
 	Ok200() (_200 int)
 	Created201() (_201 int)

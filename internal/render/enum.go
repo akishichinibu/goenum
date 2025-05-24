@@ -41,8 +41,7 @@ func (e *Enum) Render(emit Emitter) error {
 func (e *Enum) renderInterface(emit Emitter) error {
 	emit(
 		j.Type().Id(e.naming.Interface).Interface(
-			j.Id("_enum_"+e.enumFingerPrint.Hash()).Params(),
-			// j.Id("String").Params().String(),
+			j.Id(e.naming.HashMethodName(e.enumFingerPrint)).Params(),
 			j.Id(e.naming.EqualMethodName).Params(j.Id("other").Id(e.naming.Interface)).Bool(),
 			j.Id(e.naming.MatchMethodName).ParamsFunc(func(p *j.Group) {
 				for _, variant := range e.Enum.Variants {

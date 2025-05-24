@@ -33,6 +33,10 @@ func newNaming(m *model.Enum) *naming {
 	}
 }
 
+func (e *naming) HashMethodName(fingerPrint HashString) string {
+	return "_enum_" + fingerPrint.Hash()
+}
+
 func (e *naming) VariantInterfaceName(variant *model.Variant) string {
 	return fmt.Sprintf("%s%s", e.Interface, variant.Name)
 }

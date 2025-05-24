@@ -9,6 +9,8 @@ import (
 	"github.com/akishichinibu/goenum/internal/model"
 )
 
+const goenumTag = "goenum"
+
 func scanUnits(workdir string) iter.Seq2[*model.GenUnit, error] {
 	return func(yield func(*model.GenUnit, error) bool) {
 		modFile, err := loadModFile(workdir)
@@ -74,12 +76,12 @@ func scanDecl(units iter.Seq2[*model.GenUnit, error]) iter.Seq2[*model.GenReques
 				Logger.Info("found declaration", slog.String("pos", unit.Path))
 
 				if !isGoEnum(genDecl) {
-					Logger.Info("not a godantic:enum", slog.String("pos", unit.Path))
+					Logger.Debug("decl isn't marked as a goenum definition", slog.String("pos", unit.Path))
 
 					continue
 				}
 
-				Logger.Info("found godantic:enum", slog.String("pos", unit.Path))
+				Logger.Info("found goenum definition", slog.String("pos", unit.Path))
 
 				enums, err := model.NewEnum(unit, genDecl)
 				if err != nil {
@@ -103,11 +105,9 @@ func scanDecl(units iter.Seq2[*model.GenUnit, error]) iter.Seq2[*model.GenReques
 }
 
 func isGoEnum(decl *ast.GenDecl) bool {
-	if decl.Doc != nil {
-		for _, comment := range decl.Doc.List {
-			if strings.Contains(comment.Text, "godantic:enum") {
-				return true
-			}
+	for _, comment := range decl.Doc.List {
+		if strings.Contains(comment.Text, goenumTag) {
+			return true
 		}
 	}
 
